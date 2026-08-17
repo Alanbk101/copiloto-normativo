@@ -1,0 +1,42 @@
+# Contexto del proyecto
+
+Copiloto normativo con RAG. El usuario sube documentos regulatorios
+(SAT, NOMs, contratos) y pregunta en lenguaje natural. El sistema
+responde citando el párrafo fuente exacto.
+
+Este proyecto es portafolio para conseguir empleo remoto. El código se
+va a leer en entrevistas técnicas. Prioriza claridad sobre cleverness.
+
+# Stack fijo. No lo cambies ni sugieras alternativas.
+
+- Backend: Python 3.12 + FastAPI + SQLAlchemy 2.0 (async) + Alembic
+- DB: Postgres 16 + pgvector
+- Frontend: Next.js 15 App Router + TypeScript + Tailwind
+- Cola: Redis + arq (no Celery)
+- Tests: pytest + pytest-asyncio
+- Todo corre en Docker Compose
+
+# Reglas de trabajo
+
+- Un paso a la vez. Espera confirmación antes del siguiente.
+- Si algo es ambiguo, pregunta. No asumas.
+- No escribas código que no te pedí.
+- No agregues dependencias sin decírmelo primero y explicar por qué.
+- Nada de comentarios obvios. Comenta el porqué, no el qué.
+- Type hints en todo Python. Nada de `Any` sin justificación.
+- Sin `console.log` ni `print` de debug en el código final.
+
+# Reglas de arquitectura
+
+- El backend no sabe qué proveedor de LLM usa. Va detrás de una interfaz.
+- El chunking es por estructura del documento, no por conteo de tokens.
+- Toda respuesta del sistema incluye las citas o declara que no encontró.
+- Nada de prompts hardcodeados en medio de la lógica. Van en archivos aparte.
+- Migraciones con Alembic. Nunca `create_all`.
+
+# Lo que NO quiero
+
+- Frameworks de agentes (LangChain, LlamaIndex). Escribimos el RAG a mano.
+  El punto es demostrar que entiendo el pipeline, no que sé importar.
+- Abstracciones prematuras. Nada de clase base con una sola implementación.
+- README genérico con emojis y secciones de relleno.
