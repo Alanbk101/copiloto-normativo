@@ -2,10 +2,13 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from pathlib import Path
 
+from arq import create_pool
+from arq.connections import RedisSettings
 from fastapi import FastAPI
 
 from src.api.routes.documents import router as documents_router
 from src.api.routes.health import router as health_router
+from src.config import settings
 from src.db.engine import async_session_factory, create_redis_client, engine
 
 _UPLOADS_DIR = Path("uploads")
@@ -16,7 +19,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     _UPLOADS_DIR.mkdir(exist_ok=True)
     app.state.db_session_factory = async_session_factory
     app.state.redis = create_redis_client()
+    # arq connection pool for enqueueing jobs — separate from the plain Redis
+    # client used for other purposes (pub/sub, caching, etc.)
+    app.state.arq_redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
     yield
+    await app.state.arq_redis.aclose()
     await app.state.redis.aclose()
     await engine.dispose()
 

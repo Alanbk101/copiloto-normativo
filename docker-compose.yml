@@ -39,6 +39,7 @@ services:
       - ./api/alembic:/app/alembic
       - ./api/alembic.ini:/app/alembic.ini
       - ./api/tests:/app/tests
+      - uploads_data:/app/uploads
     ports:
       - "${API_PORT_HOST:-8000}:8000"
     depends_on:
@@ -47,6 +48,26 @@ services:
       redis:
         condition: service_healthy
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build: ./api
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      # HuggingFace / sentence-transformers cache — persisted in a named
+      # volume so the ~2 GB model is only downloaded on the first run.
+      HF_HOME: /model_cache
+    volumes:
+      - ./api/src:/app/src
+      - uploads_data:/app/uploads
+      - hf_cache:/model_cache
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m arq src.worker.main.WorkerSettings
 
   web:
     build: ./web
@@ -64,3 +85,5 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
+  hf_cache:

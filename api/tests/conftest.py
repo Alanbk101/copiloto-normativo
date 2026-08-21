@@ -18,9 +18,23 @@ event loop, so SQLAlchemy and asyncio always agree on which loop owns what.
 The `client` fixture also overrides `get_db_session` so the app's routes use
 the same test engine — cleanup and endpoint operations see the same database
 state without any cross-loop surprises.
+
+app.state mocks
+---------------
+ASGITransport does not run the app lifespan, so any attribute set in
+`lifespan()` via `app.state.*` is absent during tests.  The `client` fixture
+mirrors what the lifespan provides for everything that route handlers access:
+
+  - db_session_factory  → real async_sessionmaker bound to the test engine
+                          (so /health can open a session and run SELECT 1)
+  - redis               → AsyncMock whose ping() returns True
+                          (so /health sees redis as reachable)
+  - arq_redis           → AsyncMock
+                          (so POST /documents can call enqueue_job)
 """
 
 from collections.abc import AsyncIterator
+from unittest.mock import AsyncMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -47,6 +61,17 @@ async def db_session(db_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
 
 
 @pytest.fixture
+async def worker_ctx(db_engine: AsyncEngine) -> dict:
+    """
+    Minimal arq context dict for calling job functions directly in tests.
+    Provides a session_factory bound to the test engine so jobs use the same
+    database state as the rest of the test.
+    """
+    factory = async_sessionmaker(db_engine, expire_on_commit=False)
+    return {"session_factory": factory}
+
+
+@pytest.fixture
 async def client(db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
     factory = async_sessionmaker(db_engine, expire_on_commit=False)
 
@@ -55,7 +80,18 @@ async def client(db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
             yield session
 
     app.dependency_overrides[get_db_session] = _override
+    # Mirror the three app.state attributes set by the lifespan so that both
+    # /health and POST /documents work without a running Redis or arq pool.
+    app.state.db_session_factory = factory
+    app.state.redis = AsyncMock()
+    app.state.redis.ping.return_value = True
+    app.state.arq_redis = AsyncMock()
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
     app.dependency_overrides.clear()
+    del app.state.db_session_factory
+    del app.state.redis
+    del app.state.arq_redis

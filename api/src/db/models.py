@@ -70,7 +70,7 @@ class Chunk(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     structure_path: Mapped[str] = mapped_column(Text, nullable=False)
     page_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(1536))
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(1024))
     tsv: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed("to_tsvector('spanish', content)", persisted=True),

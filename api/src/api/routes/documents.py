@@ -3,14 +3,14 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.engine import get_db_session
 from src.db.models import Document
-from src.ingest.service import count_chunks, ingest_document
+from src.ingest.service import count_chunks, register_document
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -30,17 +30,29 @@ class DocumentUploadResponse(DocumentResponse):
     already_existed: bool
 
 
-@router.post("", response_model=DocumentUploadResponse, status_code=200)
+@router.post("", response_model=DocumentUploadResponse)
 async def upload_document(
+    request: Request,
+    response: Response,
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_db_session),
 ) -> DocumentUploadResponse:
+    """
+    Upload a PDF document for ingestion.
+
+    Returns 202 Accepted for new uploads — the document is registered
+    immediately but chunking and embedding happen asynchronously in the
+    worker.  Poll GET /documents/{id} to track progress.
+
+    Returns 200 OK for duplicate uploads (same content hash) — no new
+    job is enqueued.
+    """
     _validate_pdf(file)
 
     content = await file.read()
     content_hash = hashlib.sha256(content).hexdigest()
 
-    # Dedup check: return the existing document without re-processing.
+    # Dedup: return the existing record without re-processing.
     existing = await session.scalar(
         select(Document).where(Document.content_hash == content_hash)
     )
@@ -59,27 +71,21 @@ async def upload_document(
     pdf_path = _UPLOADS_DIR / f"{content_hash}.pdf"
     pdf_path.write_bytes(content)
 
-    try:
-        doc, chunk_count = await ingest_document(
-            session=session,
-            pdf_path=pdf_path,
-            filename=file.filename or "document.pdf",
-            content_hash=content_hash,
-        )
-    except Exception as exc:
-        # The service already marked the document as 'failed' in the DB.
-        # Surface a clear error instead of a raw 500.
-        raise HTTPException(
-            status_code=422,
-            detail=f"PDF processing failed: {exc}",
-        ) from exc
+    doc = await register_document(
+        session=session,
+        filename=file.filename or "document.pdf",
+        content_hash=content_hash,
+    )
 
+    await request.app.state.arq_redis.enqueue_job("process_document", str(doc.id))
+
+    response.status_code = 202
     return DocumentUploadResponse(
         id=doc.id,
         filename=doc.filename,
         status=doc.status.value,
         page_count=doc.page_count,
-        chunk_count=chunk_count,
+        chunk_count=0,
         created_at=doc.created_at,
         already_existed=False,
     )
