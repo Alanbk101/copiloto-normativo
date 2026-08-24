@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from src.api.routes.documents import router as documents_router
 from src.api.routes.health import router as health_router
+from src.api.routes.search import router as search_router
 from src.config import settings
 from src.db.engine import async_session_factory, create_redis_client, engine
 
@@ -31,3 +32,4 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title="Copiloto Normativo", lifespan=lifespan)
 app.include_router(health_router)
 app.include_router(documents_router)
+app.include_router(search_router)

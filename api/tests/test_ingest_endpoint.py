@@ -22,7 +22,6 @@ from pathlib import Path
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Document
@@ -41,13 +40,6 @@ def sample_pdf(tmp_path: Path) -> Path:
     c.save()
     return path
 
-
-@pytest.fixture(autouse=True)
-async def cleanup_documents(db_session: AsyncSession) -> None:
-    """Delete all documents (and cascaded chunks) created during each test."""
-    yield
-    await db_session.execute(delete(Document))
-    await db_session.commit()
 
 
 async def test_upload_pdf_returns_202_with_pending_status(

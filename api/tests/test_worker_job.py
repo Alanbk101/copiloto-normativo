@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 from reportlab.pdfgen import canvas
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Chunk, Document, DocumentStatus
@@ -47,12 +47,6 @@ def sample_pdf_path(tmp_path: Path) -> tuple[Path, str]:
     final.write_bytes(content)
     return tmp_path, content_hash
 
-
-@pytest.fixture(autouse=True)
-async def cleanup_documents(db_session: AsyncSession) -> None:
-    yield
-    await db_session.execute(delete(Document))
-    await db_session.commit()
 
 
 def _fake_encode_passages(texts: list[str]) -> list[list[float]]:

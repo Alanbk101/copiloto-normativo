@@ -38,11 +38,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.config import settings
 from src.db.engine import get_db_session
+from src.db.models import Document
 from src.main import app
 
 
@@ -95,3 +97,11 @@ async def client(db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
     del app.state.db_session_factory
     del app.state.redis
     del app.state.arq_redis
+
+
+@pytest.fixture(autouse=True)
+async def cleanup_documents(db_session: AsyncSession) -> AsyncIterator[None]:
+    """Delete all documents (and cascaded chunks) after every test that uses the DB."""
+    yield
+    await db_session.execute(delete(Document))
+    await db_session.commit()
