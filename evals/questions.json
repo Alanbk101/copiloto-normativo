@@ -1,0 +1,212 @@
+[
+  {
+    "id": "q001",
+    "question": "¿Cuál es el plazo para presentar la declaración anual de personas físicas?",
+    "expected_keywords": ["30 de abril", "declaración anual", "personas físicas"],
+    "expected_structure_path": "Capítulo 3/Artículo 12",
+    "note": "Reemplazar expected_keywords y expected_structure_path con los valores reales del chunk una vez cargados los documentos."
+  },
+  {
+    "id": "q002",
+    "question": "¿Qué sanciones aplican por omisión de declaración fiscal?",
+    "expected_keywords": ["multa", "sanción", "omisión"],
+    "expected_structure_path": "Capítulo 7/Artículo 31",
+    "note": ""
+  },
+  {
+    "id": "q003",
+    "question": "¿Cuáles son los requisitos para obtener una constancia de situación fiscal?",
+    "expected_keywords": ["constancia", "situación fiscal", "RFC"],
+    "expected_structure_path": "Capítulo 2/Artículo 9",
+    "note": ""
+  },
+  {
+    "id": "q004",
+    "question": "¿Qué documentos debe conservar el contribuyente como comprobantes fiscales?",
+    "expected_keywords": ["CFDI", "comprobante fiscal", "conservar"],
+    "expected_structure_path": "Capítulo 4/Artículo 18",
+    "note": ""
+  },
+  {
+    "id": "q005",
+    "question": "¿En qué casos procede la devolución del IVA?",
+    "expected_keywords": ["devolución", "IVA", "saldo a favor"],
+    "expected_structure_path": "Capítulo 5/Artículo 22",
+    "note": ""
+  },
+  {
+    "id": "q006",
+    "question": "¿Cuál es la tasa del ISR para personas morales?",
+    "expected_keywords": ["30%", "tasa", "personas morales", "ISR"],
+    "expected_structure_path": "Capítulo 1/Artículo 9",
+    "note": ""
+  },
+  {
+    "id": "q007",
+    "question": "¿Qué es el régimen simplificado de confianza y quiénes pueden acceder a él?",
+    "expected_keywords": ["RESICO", "régimen simplificado", "confianza"],
+    "expected_structure_path": "Capítulo 2/Artículo 113-E",
+    "note": ""
+  },
+  {
+    "id": "q008",
+    "question": "¿Cuándo prescribe la facultad de la autoridad para determinar contribuciones omitidas?",
+    "expected_keywords": ["prescripción", "cinco años", "facultades"],
+    "expected_structure_path": "Capítulo 6/Artículo 67",
+    "note": ""
+  },
+  {
+    "id": "q009",
+    "question": "¿Qué información debe contener un CFDI de nómina?",
+    "expected_keywords": ["CFDI", "nómina", "percepciones", "deducciones"],
+    "expected_structure_path": "Anexo 20/Sección 3",
+    "note": ""
+  },
+  {
+    "id": "q010",
+    "question": "¿Cuáles son las deducciones autorizadas para personas morales?",
+    "expected_keywords": ["deducciones", "autorizadas", "personas morales"],
+    "expected_structure_path": "Capítulo 1/Artículo 25",
+    "note": ""
+  },
+  {
+    "id": "q011",
+    "question": "¿Qué es la PTU y cómo se calcula?",
+    "expected_keywords": ["PTU", "participación", "utilidades", "trabajadores"],
+    "expected_structure_path": "Capítulo 1/Artículo 9",
+    "note": ""
+  },
+  {
+    "id": "q012",
+    "question": "¿Cuál es el procedimiento para interponer un recurso de revocación?",
+    "expected_keywords": ["recurso de revocación", "30 días", "escrito"],
+    "expected_structure_path": "Capítulo 11/Artículo 116",
+    "note": ""
+  },
+  {
+    "id": "q013",
+    "question": "¿Qué obligaciones tienen los retenedores del ISR?",
+    "expected_keywords": ["retención", "enterar", "retenedor"],
+    "expected_structure_path": "Capítulo 3/Artículo 96",
+    "note": ""
+  },
+  {
+    "id": "q014",
+    "question": "¿Cuál es el límite de ingresos para tributar en el RESICO?",
+    "expected_keywords": ["3,500,000", "límite", "ingresos"],
+    "expected_structure_path": "Capítulo 2/Artículo 113-E",
+    "note": ""
+  },
+  {
+    "id": "q015",
+    "question": "¿Cómo se determina la base del impuesto predial?",
+    "expected_keywords": ["valor catastral", "predial", "base"],
+    "expected_structure_path": "Título III/Artículo 20",
+    "note": ""
+  },
+  {
+    "id": "q016",
+    "question": "¿Qué es una visita domiciliaria y cuáles son los derechos del contribuyente durante ella?",
+    "expected_keywords": ["visita domiciliaria", "derechos", "orden"],
+    "expected_structure_path": "Capítulo 6/Artículo 44",
+    "note": ""
+  },
+  {
+    "id": "q017",
+    "question": "¿Cuáles son los plazos para emitir resoluciones en procedimientos de fiscalización?",
+    "expected_keywords": ["resolución", "12 meses", "fiscalización"],
+    "expected_structure_path": "Capítulo 6/Artículo 46-A",
+    "note": ""
+  },
+  {
+    "id": "q018",
+    "question": "¿Qué es el buzón tributario y para qué sirve?",
+    "expected_keywords": ["buzón tributario", "notificaciones", "electrónico"],
+    "expected_structure_path": "Capítulo 1/Artículo 17-K",
+    "note": ""
+  },
+  {
+    "id": "q019",
+    "question": "¿En qué consiste la responsabilidad solidaria en materia fiscal?",
+    "expected_keywords": ["responsabilidad solidaria", "liquidadores", "socios"],
+    "expected_structure_path": "Capítulo 1/Artículo 26",
+    "note": ""
+  },
+  {
+    "id": "q020",
+    "question": "¿Cómo se acredita el IVA trasladado?",
+    "expected_keywords": ["acreditamiento", "IVA trasladado", "actividades gravadas"],
+    "expected_structure_path": "Capítulo 2/Artículo 5",
+    "note": ""
+  },
+  {
+    "id": "q021",
+    "question": "¿Qué actividades están exentas del IVA?",
+    "expected_keywords": ["exento", "IVA", "tasa cero"],
+    "expected_structure_path": "Capítulo 3/Artículo 9",
+    "note": ""
+  },
+  {
+    "id": "q022",
+    "question": "¿Cuál es la periodicidad de las declaraciones de IVA?",
+    "expected_keywords": ["mensual", "declaración", "IVA", "17 del mes"],
+    "expected_structure_path": "Capítulo 5/Artículo 32",
+    "note": ""
+  },
+  {
+    "id": "q023",
+    "question": "¿Qué es el dictamen fiscal y quiénes están obligados a presentarlo?",
+    "expected_keywords": ["dictamen", "contador público", "obligados"],
+    "expected_structure_path": "Capítulo 6/Artículo 32-A",
+    "note": ""
+  },
+  {
+    "id": "q024",
+    "question": "¿Cómo se calcula la depreciación de activos fijos para efectos fiscales?",
+    "expected_keywords": ["depreciación", "activos fijos", "por ciento"],
+    "expected_structure_path": "Capítulo 1/Artículo 31",
+    "note": ""
+  },
+  {
+    "id": "q025",
+    "question": "¿Qué es la factura electrónica y cuáles son sus requisitos?",
+    "expected_keywords": ["CFDI", "requisitos", "factura electrónica", "sello digital"],
+    "expected_structure_path": "Capítulo 1/Artículo 29-A",
+    "note": ""
+  },
+  {
+    "id": "q026",
+    "question": "¿Cuál es el procedimiento para cancelar un CFDI?",
+    "expected_keywords": ["cancelación", "CFDI", "receptor", "aceptación"],
+    "expected_structure_path": "Capítulo 1/Artículo 29-A",
+    "note": ""
+  },
+  {
+    "id": "q027",
+    "question": "¿Qué es la figura del establecimiento permanente en materia fiscal?",
+    "expected_keywords": ["establecimiento permanente", "residentes en el extranjero"],
+    "expected_structure_path": "Capítulo 4/Artículo 2",
+    "note": ""
+  },
+  {
+    "id": "q028",
+    "question": "¿Cuáles son las obligaciones de los patrones en materia de IMSS?",
+    "expected_keywords": ["cuotas", "IMSS", "patrón", "seguridad social"],
+    "expected_structure_path": "Capítulo 1/Artículo 15",
+    "note": ""
+  },
+  {
+    "id": "q029",
+    "question": "¿Qué es el complemento de pago en los CFDI y cuándo se emite?",
+    "expected_keywords": ["complemento de pago", "parcialidades", "pago en parcialidades"],
+    "expected_structure_path": "Anexo 20/Sección 2",
+    "note": ""
+  },
+  {
+    "id": "q030",
+    "question": "¿Cuáles son las infracciones y multas por no expedir comprobantes fiscales?",
+    "expected_keywords": ["infracción", "multa", "no expedir", "comprobante"],
+    "expected_structure_path": "Capítulo 8/Artículo 83",
+    "note": ""
+  }
+]
