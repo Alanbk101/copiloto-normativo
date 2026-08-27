@@ -35,13 +35,16 @@ services:
       API_PORT: ${API_PORT:-8000}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:1.5b}
+      # Shared with worker so the ~2 GB encoder is downloaded only once.
+      HF_HOME: /model_cache
     volumes:
       - ./api/src:/app/src
       - ./api/alembic:/app/alembic
       - ./api/alembic.ini:/app/alembic.ini
       - ./api/tests:/app/tests
       - uploads_data:/app/uploads
+      - hf_cache:/model_cache
     ports:
       - "${API_PORT_HOST:-8000}:8000"
     depends_on:
@@ -51,7 +54,10 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    # API_RELOAD is empty by default (stable process, warmup works correctly).
+    # Set API_RELOAD=--reload in .env only when you need hot-reload during
+    # development, accepting that the encoder will reload on every file change.
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 ${API_RELOAD}
 
   worker:
     build: ./api
@@ -76,8 +82,8 @@ services:
   ollama:
     image: ollama/ollama
     volumes:
-      # Persists downloaded models across container rebuilds (~2 GB for qwen2.5:3b).
-      # Pull with: docker compose exec ollama ollama pull qwen2.5:3b
+      # Persists downloaded models across container rebuilds (~1 GB for qwen2.5:1.5b).
+      # Pull with: docker compose exec ollama ollama pull qwen2.5:1.5b
       - ollama_models:/root/.ollama
     # Port 11434 is intentionally NOT bound to the host — only accessible within
     # the compose network via http://ollama:11434.

@@ -33,3 +33,4 @@ class WorkerSettings:
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
     on_startup = on_startup
     on_shutdown = on_shutdown
+    job_timeout = 1800  # 30 min — CPU inference on large docs can be slow

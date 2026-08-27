@@ -41,13 +41,13 @@ async def test_ollama_client_sends_correct_request() -> None:
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
     with patch("src.generation.llm.httpx.AsyncClient", return_value=mock_client):
-        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:3b")
+        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:1.5b")
         result = await client.generate("¿Cuál es el plazo?")
 
     mock_client.post.assert_called_once_with(
         "http://ollama:11434/api/generate",
         json={
-            "model": "qwen2.5:3b",
+            "model": "qwen2.5:1.5b",
             "prompt": "¿Cuál es el plazo?",
             "stream": False,
         },
@@ -64,7 +64,7 @@ async def test_ollama_client_raises_on_timeout() -> None:
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
     with patch("src.generation.llm.httpx.AsyncClient", return_value=mock_client):
-        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:3b")
+        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:1.5b")
         with pytest.raises(OllamaUnavailable, match="timeout"):
             await client.generate("pregunta")
 
@@ -84,7 +84,7 @@ async def test_ollama_client_raises_on_http_error() -> None:
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
     with patch("src.generation.llm.httpx.AsyncClient", return_value=mock_client):
-        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:3b")
+        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:1.5b")
         with pytest.raises(OllamaUnavailable, match="503"):
             await client.generate("pregunta")
 
@@ -98,7 +98,7 @@ async def test_ollama_client_raises_on_connection_error() -> None:
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
     with patch("src.generation.llm.httpx.AsyncClient", return_value=mock_client):
-        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:3b")
+        client = OllamaClient(base_url="http://ollama:11434", model="qwen2.5:1.5b")
         with pytest.raises(OllamaUnavailable):
             await client.generate("pregunta")
 

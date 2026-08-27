@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     api_port: int = 8000
     log_level: str = "info"
     ollama_url: str = "http://ollama:11434"
-    ollama_model: str = "qwen2.5:3b"
+    ollama_model: str = "qwen2.5:1.5b"
 
 
 settings = Settings()

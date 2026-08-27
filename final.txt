@@ -1,0 +1,36 @@
+{
+  "answer": "Según los fragmentos proporcionados, los siguientes se encuentran obligados a pagar el impuesto sobre la renta:\n\n1. \"Los residentes en México y los residentes en el extranjero con establecimiento permanente en el país por los ingresos atribuibles al mismo, están obligados a pagar el impuesto de conformidad con esta Ley, por los ingresos que obtengan a través de entidades extranjeras transparentes fiscales en la proporción que les corresponda por su participación en ellas.\"\n\n2. \"Los residentes en México y los residentes en el extranjero con establecimiento permanente en el país por los ingresos atribuibles al mismo, también se encuentran obligados a pagar el impuesto de conformidad con esta Ley, por los ingresos que obtengan a través de figuras jurídicas extranjeras en la proporción que les corresponda, sin importar su tratamiento fiscal en el extranjero.\"\n\nPor lo tanto, los residentes en México y los residentes en el extranjero con establecimiento permanente en México por los ingresos atribuibles a dicha ubicación son obligados a pagar el impuesto sobre la renta.",
+  "sources": [
+    {
+      "chunk_id": "1f584432-1e97-4f26-bf71-c827986cca79",
+      "document_id": "0b828fd8-12b8-4e35-b681-0cbb041f79a2",
+      "structure_path": "TÍTULO II > artículo 123 de la Constitución Política de los Estados Unidos Mexicanos",
+      "page_number": 13
+    },
+    {
+      "chunk_id": "536122ef-dde2-4f37-ab77-de9775d230c7",
+      "document_id": "0b828fd8-12b8-4e35-b681-0cbb041f79a2",
+      "structure_path": "TÍTULO I > Artículo 4-B. Los residentes en México y los residentes en el extranjero con establecimiento",
+      "page_number": 5
+    },
+    {
+      "chunk_id": "7552c4ce-d62e-4baa-a49e-c2e58dea66dc",
+      "document_id": "0b828fd8-12b8-4e35-b681-0cbb041f79a2",
+      "structure_path": "TÍTULO II > CAPÍTULO I > artículo 166 de esta Ley",
+      "page_number": 24
+    },
+    {
+      "chunk_id": "cfe14296-f81c-47d9-8de5-36753e78efca",
+      "document_id": "0b828fd8-12b8-4e35-b681-0cbb041f79a2",
+      "structure_path": "Título de esta Ley que le corresponda al contribuyente y serán gravables en el mismo año de calendario > Artículo 5. Los residentes en México podrán acreditar, contra el impuesto que conforme a esta Ley",
+      "page_number": 6
+    },
+    {
+      "chunk_id": "de125ce5-b8e1-478e-813c-a7a82c88829c",
+      "document_id": "0b828fd8-12b8-4e35-b681-0cbb041f79a2",
+      "structure_path": "TÍTULO I > Artículo 1. Las personas físicas y las morales están obligadas al pago del impuesto sobre la renta en",
+      "page_number": 1
+    }
+  ],
+  "found": true
+}
