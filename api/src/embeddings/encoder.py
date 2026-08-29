@@ -1,66 +1,162 @@
 """
-Text encoder backed by intfloat/multilingual-e5-large (1024 dimensions).
+Text encoder — local (multilingual-e5-large) or Jina AI API.
 
-e5 prefixing contract
----------------------
-The model was trained with explicit prefixes that must be respected at
-inference time — omitting them degrades retrieval quality significantly:
+Public interface
+----------------
+Both functions are async.  Callers await them directly; the implementation
+handles whether the work belongs in a thread (local, CPU-bound) or in an
+async HTTP call (Jina, I/O-bound).
 
-  - Passages to be indexed  →  "passage: <text>"
-  - User queries at search time  →  "query: <text>"
+  encode_passages(texts)  →  list[list[float]]   (batch, for indexing)
+  encode_query(text)      →  list[float]          (single, for retrieval)
 
-Model loading
--------------
-SentenceTransformer initialisation downloads ~2 GB and takes several
-seconds.  The module-level singleton `_model` is initialised on the first
-call to `_get_model()` and reused for every subsequent call.  In the
-Docker worker the model directory is mounted from a named volume
-(`HF_HOME=/model_cache`) so it is only downloaded once across rebuilds.
+Provider selection
+------------------
+Controlled by settings.embedding_provider:
 
-Thread safety
--------------
-`encode()` is synchronous and CPU/GPU-bound.  The worker calls these
-functions via `asyncio.to_thread` so the event loop is never blocked.
-These functions themselves are intentionally plain (non-async) so they
-can also be called directly from synchronous test code.
+  "jina"  — calls the Jina AI Embeddings API (requires JINA_API_KEY).
+             Uses task-specific LoRA adapters:
+               retrieval.passage  for encode_passages
+               retrieval.query    for encode_query
+             Requests dimensions=1024 explicitly so the column contract is
+             documented in code and immune to future API default changes.
+
+  "local" — loads intfloat/multilingual-e5-large via sentence-transformers.
+             CPU-bound; runs in asyncio.to_thread so the event loop is free.
+             Applies "passage: " / "query: " prefixes required by e5 training.
+
+Jina error handling
+-------------------
+JinaUnavailable is raised on 401 (bad key), 429 (rate limit), timeouts, and
+network failures.  The caller surfaces a structured error to the user instead
+of an unhandled exception.
 """
 
-from sentence_transformers import SentenceTransformer
+import asyncio
+import logging
+
+import httpx
+
+from src.config import settings
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Jina
+# ---------------------------------------------------------------------------
+
+_JINA_ENDPOINT = "https://api.jina.ai/v1/embeddings"
+_JINA_DIM = 1024  # matches vector(1024) in the DB schema
+
+_JINA_TIMEOUT = httpx.Timeout(connect=10.0, write=10.0, read=60.0, pool=10.0)
+
+
+class JinaUnavailable(Exception):
+    """Raised when the Jina Embeddings API cannot be reached or returns an error."""
+
+
+async def _jina_embed(texts: list[str], task: str) -> list[list[float]]:
+    """
+    Call the Jina Embeddings API for *texts* with the given *task* adapter.
+
+    task values:
+      "retrieval.passage" — for document chunks being indexed
+      "retrieval.query"   — for user queries at search time
+    """
+    headers = {
+        "Authorization": f"Bearer {settings.jina_api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": settings.jina_model,
+        "input": texts,
+        "task": task,
+        "dimensions": _JINA_DIM,
+    }
+    logger.debug("Jina embed  task=%s  texts=%d  model=%s", task, len(texts), settings.jina_model)
+    try:
+        async with httpx.AsyncClient(timeout=_JINA_TIMEOUT) as client:
+            response = await client.post(_JINA_ENDPOINT, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            # OpenAI-compatible response: data[].embedding, ordered by index
+            items = sorted(data["data"], key=lambda x: x["index"])
+            embeddings = [item["embedding"] for item in items]
+            logger.debug("Jina embed ← %d vectors of dim %d", len(embeddings), len(embeddings[0]))
+            return embeddings
+    except httpx.TimeoutException as exc:
+        logger.error("Jina timeout: %s", exc)
+        raise JinaUnavailable(f"Jina did not respond within {_JINA_TIMEOUT.read}s") from exc
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code
+        if status == 401:
+            logger.error("Jina 401 — check JINA_API_KEY")
+            raise JinaUnavailable("Jina rejected the API key (401)") from exc
+        if status == 429:
+            logger.error("Jina 429 — rate limit exceeded")
+            raise JinaUnavailable("Jina rate limit exceeded (429)") from exc
+        logger.error("Jina HTTP %s — body: %s", status, exc.response.text[:500])
+        raise JinaUnavailable(f"Jina returned HTTP {status}") from exc
+    except httpx.RequestError as exc:
+        logger.error("Jina request error: %s", exc)
+        raise JinaUnavailable(f"Could not reach Jina: {exc}") from exc
+
+
+# ---------------------------------------------------------------------------
+# Local (sentence-transformers, kept for EMBEDDING_PROVIDER=local)
+# ---------------------------------------------------------------------------
 
 _MODEL_NAME = "intfloat/multilingual-e5-large"
-_EMBEDDING_DIM = 1024
 
-_model: SentenceTransformer | None = None
-
-
-def _get_model() -> SentenceTransformer:
-    global _model
-    if _model is None:
-        _model = SentenceTransformer(_MODEL_NAME)
-    return _model
+# Loaded on first use; None until then.  Only instantiated when provider=local.
+_local_model = None
 
 
-def encode_passages(texts: list[str]) -> list[list[float]]:
-    """
-    Encode a batch of document passages for indexing.
+def _get_local_model():
+    global _local_model
+    if _local_model is None:
+        from sentence_transformers import SentenceTransformer  # noqa: PLC0415
+        _local_model = SentenceTransformer(_MODEL_NAME)
+    return _local_model
 
-    Applies the required "passage: " prefix before encoding so that
-    cosine similarity with query embeddings (encoded with "query: ") is
-    meaningful.  Always processes the full batch in one call — never
-    loops one text at a time.
-    """
+
+def _local_encode_passages(texts: list[str]) -> list[list[float]]:
     prefixed = [f"passage: {t}" for t in texts]
-    model = _get_model()
+    model = _get_local_model()
     embeddings = model.encode(prefixed, convert_to_numpy=True)
     return [vec.tolist() for vec in embeddings]
 
 
-def encode_query(text: str) -> list[float]:
+def _local_encode_query(text: str) -> list[float]:
+    model = _get_local_model()
+    embedding = model.encode(f"query: {text}", convert_to_numpy=True)
+    return embedding.tolist()
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+async def encode_passages(texts: list[str]) -> list[list[float]]:
+    """
+    Encode a batch of document passages for indexing.
+
+    With provider=jina: single batched HTTP call to the Jina API.
+    With provider=local: runs sentence-transformers in a thread pool.
+    """
+    if settings.embedding_provider == "jina":
+        return await _jina_embed(texts, task="retrieval.passage")
+    return await asyncio.to_thread(_local_encode_passages, texts)
+
+
+async def encode_query(text: str) -> list[float]:
     """
     Encode a single user query for retrieval.
 
-    Uses the "query: " prefix required by the e5 training objective.
+    With provider=jina: HTTP call to the Jina API.
+    With provider=local: runs sentence-transformers in a thread pool.
     """
-    model = _get_model()
-    embedding = model.encode(f"query: {text}", convert_to_numpy=True)
-    return embedding.tolist()
+    if settings.embedding_provider == "jina":
+        results = await _jina_embed([text], task="retrieval.query")
+        return results[0]
+    return await asyncio.to_thread(_local_encode_query, text)

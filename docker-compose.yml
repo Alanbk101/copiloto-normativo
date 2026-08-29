@@ -36,6 +36,12 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:1.5b}
+      LLM_PROVIDER: ${LLM_PROVIDER:-groq}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-qwen/qwen3.8-27b}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-jina}
+      JINA_API_KEY: ${JINA_API_KEY}
+      JINA_MODEL: ${JINA_MODEL:-jina-embeddings-v3}
       # Shared with worker so the ~2 GB encoder is downloaded only once.
       HF_HOME: /model_cache
     volumes:
@@ -52,8 +58,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
     # API_RELOAD is empty by default (stable process, warmup works correctly).
     # Set API_RELOAD=--reload in .env only when you need hot-reload during
     # development, accepting that the encoder will reload on every file change.
@@ -65,6 +69,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-jina}
+      JINA_API_KEY: ${JINA_API_KEY}
+      JINA_MODEL: ${JINA_MODEL:-jina-embeddings-v3}
       # HuggingFace / sentence-transformers cache — persisted in a named
       # volume so the ~2 GB model is only downloaded on the first run.
       HF_HOME: /model_cache

@@ -1,31 +1,27 @@
 """
-LLM client interface and Ollama implementation.
+LLM client interface, Ollama implementation, and Groq implementation.
 
 LLMClient is a Protocol (structural typing) — any object with an async
 `generate(prompt)` method satisfies it.  This keeps the generation logic
 decoupled from the concrete provider, as required by the architecture rules.
 
+LLMError
+--------
+Base exception for all LLM provider failures.  answer.py catches this single
+type so it stays provider-agnostic.  Each concrete subclass adds context
+specific to its provider (timeout values, HTTP status codes, etc.).
+
 OllamaClient
 ------------
-Wraps the Ollama HTTP API ( POST /api/generate ).  Uses httpx.AsyncClient
-so the FastAPI event loop is never blocked while waiting for the model.
+Wraps the Ollama HTTP API ( POST /api/generate ).  Suitable for local
+development when a GPU or a patient CPU is available.  read timeout is long
+(300 s) to cover cold model load + CPU generation.
 
-Timeout
--------
-Only the read timeout needs to be long.  The first call to Ollama also loads
-the model into RAM (several GB on CPU), which can take 60–120 s before the
-first token appears.  Subsequent calls are faster (model stays hot) but
-generation itself on CPU still takes 30–90 s for a 3B model with a legal
-prompt.  We set read=180 s to cover both the cold-load and generation cost.
-Connection, write, and pool timeouts stay short (5–10 s) because those
-phases are not compute-bound and a long wait there indicates a real failure.
-
-Error handling
---------------
-Any httpx error (network failure, timeout, non-200 response) raises
-OllamaUnavailable.  The caller — answer_question — catches it and returns
-a structured AnswerResult instead of letting a raw exception reach the
-client as a 500.
+GroqClient
+----------
+Wraps the Groq cloud API using the OpenAI-compatible chat completions endpoint.
+Requires a GROQ_API_KEY.  Groq runs inference on custom hardware and typically
+responds in 1–3 s, so timeouts are kept short.  No warmup needed.
 """
 
 import logging
@@ -40,14 +36,26 @@ class LLMClient(Protocol):
     async def generate(self, prompt: str) -> str: ...
 
 
-class OllamaUnavailable(Exception):
+class LLMError(Exception):
+    """Base class for all LLM provider errors."""
+
+
+class OllamaUnavailable(LLMError):
     """Raised when the Ollama service cannot be reached or returns an error."""
 
 
-_TIMEOUT = httpx.Timeout(
-    connect=10.0,  # Ollama is local — if connect takes >10 s it is down
+class GroqUnavailable(LLMError):
+    """Raised when the Groq API cannot be reached or returns an error."""
+
+
+# ---------------------------------------------------------------------------
+# OllamaClient
+# ---------------------------------------------------------------------------
+
+_OLLAMA_TIMEOUT = httpx.Timeout(
+    connect=10.0,
     write=10.0,
-    read=300.0,    # cold model load (~60–120 s) + CPU generation on long prompts
+    read=300.0,   # cold model load (~60–120 s) + CPU generation on long prompts
     pool=10.0,
 )
 
@@ -62,9 +70,7 @@ class OllamaClient:
         Load the model into Ollama's RAM before the first real request.
 
         Sends a minimal prompt so Ollama pulls the model weights into memory.
-        Subsequent calls pay only the generation cost, not the load cost.
-        Failures are silently ignored — warmup is best-effort; if Ollama is
-        not ready yet the first real /ask call will still work (just slower).
+        Failures are silently ignored — warmup is best-effort.
         """
         try:
             await self.generate("ok")
@@ -82,12 +88,12 @@ class OllamaClient:
         payload = {
             "model": self._model,
             "prompt": prompt,
-            "stream": False,  # wait for the full response before returning
+            "stream": False,
         }
         logger.debug("Ollama request → %s  model=%s  prompt_len=%d",
                      url, self._model, len(prompt))
         try:
-            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=_OLLAMA_TIMEOUT) as client:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
                 data = response.json()
@@ -95,9 +101,9 @@ class OllamaClient:
                 logger.debug("Ollama response ← %d chars", len(result))
                 return result
         except httpx.TimeoutException as exc:
-            logger.error("Ollama timeout after %.0fs: %s", _TIMEOUT.read, exc)
+            logger.error("Ollama timeout after %.0fs: %s", _OLLAMA_TIMEOUT.read, exc)
             raise OllamaUnavailable(
-                f"Ollama did not respond within the timeout ({_TIMEOUT.read}s)"
+                f"Ollama did not respond within the timeout ({_OLLAMA_TIMEOUT.read}s)"
             ) from exc
         except httpx.HTTPStatusError as exc:
             logger.error(
@@ -114,3 +120,73 @@ class OllamaClient:
         except Exception as exc:
             logger.exception("Unexpected error calling Ollama: %s", exc)
             raise OllamaUnavailable(f"Unexpected error: {exc}") from exc
+
+
+# ---------------------------------------------------------------------------
+# GroqClient
+# ---------------------------------------------------------------------------
+
+_GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
+
+_GROQ_TIMEOUT = httpx.Timeout(
+    connect=10.0,
+    write=10.0,
+    read=60.0,   # Groq is fast; 60 s is generous for any plausible prompt
+    pool=10.0,
+)
+
+
+class GroqClient:
+    def __init__(self, api_key: str, model: str) -> None:
+        self._api_key = api_key
+        self._model = model
+
+    async def generate(self, prompt: str) -> str:
+        """
+        Send *prompt* to Groq and return the model's response text.
+
+        Uses the OpenAI-compatible chat completions format.
+        Raises GroqUnavailable on network errors, timeouts, or API errors
+        (including 401 for a bad key and 429 for rate limits).
+        """
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self._model,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+        logger.debug("Groq request  model=%s  prompt_len=%d",
+                     self._model, len(prompt))
+        try:
+            async with httpx.AsyncClient(timeout=_GROQ_TIMEOUT) as client:
+                response = await client.post(
+                    _GROQ_ENDPOINT, headers=headers, json=payload
+                )
+                response.raise_for_status()
+                data = response.json()
+                result: str = data["choices"][0]["message"]["content"]
+                logger.debug("Groq response ← %d chars", len(result))
+                return result
+        except httpx.TimeoutException as exc:
+            logger.error("Groq timeout: %s", exc)
+            raise GroqUnavailable(
+                f"Groq did not respond within {_GROQ_TIMEOUT.read}s"
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            if status == 401:
+                logger.error("Groq 401 — check GROQ_API_KEY")
+                raise GroqUnavailable("Groq rejected the API key (401)") from exc
+            if status == 429:
+                logger.error("Groq 429 — rate limit exceeded")
+                raise GroqUnavailable("Groq rate limit exceeded (429)") from exc
+            logger.error("Groq HTTP %s — body: %s", status, exc.response.text[:500])
+            raise GroqUnavailable(f"Groq returned HTTP {status}") from exc
+        except httpx.RequestError as exc:
+            logger.error("Groq request error: %s", exc)
+            raise GroqUnavailable(f"Could not reach Groq: {exc}") from exc
+        except Exception as exc:
+            logger.exception("Unexpected error calling Groq: %s", exc)
+            raise GroqUnavailable(f"Unexpected error: {exc}") from exc

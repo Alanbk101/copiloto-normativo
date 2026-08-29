@@ -1,11 +1,15 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes.ask import router as ask_router
 from src.api.routes.documents import router as documents_router
@@ -14,7 +18,7 @@ from src.api.routes.search import router as search_router
 from src.config import settings
 from src.db.engine import async_session_factory, create_redis_client, engine
 from src.embeddings.encoder import encode_query
-from src.generation.llm import OllamaClient
+from src.generation.llm import GroqClient, OllamaClient
 
 _UPLOADS_DIR = Path("uploads")
 
@@ -28,24 +32,39 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # client used for other purposes (pub/sub, caching, etc.)
     app.state.arq_redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
 
-    # Warm up the sentence-transformer encoder.  encode_query is synchronous
-    # and CPU-bound; running it here (in a thread, so the event loop stays
-    # free) loads the ~2 GB model weights into the process singleton before
-    # the first request arrives.  Without this, the first /ask or /search call
-    # would pay the full load cost (~10–30 s) while holding a live request.
-    # We await it — a few extra seconds at startup beats a frozen first request.
-    await asyncio.to_thread(encode_query, "warmup")
+    # For the local provider, load the ~2 GB model weights into the process
+    # singleton before the first request arrives so that /ask and /search do
+    # not pay the cold-load cost (~10–30 s) on the first real call.
+    # With the Jina provider there is nothing to warm up — the API is stateless.
+    if settings.embedding_provider == "local":
+        await encode_query("warmup")
 
-    # LLM client — shared across requests; stateless (no connection pool to close)
-    llm = OllamaClient(
-        base_url=settings.ollama_url,
-        model=settings.ollama_model,
-    )
+    logger.info("Embedding provider: %s  model: %s",
+                settings.embedding_provider,
+                settings.jina_model if settings.embedding_provider == "jina"
+                else "intfloat/multilingual-e5-large")
+
+    # LLM client — selected at startup by LLM_PROVIDER; shared across requests.
+    if settings.llm_provider == "groq":
+        if not settings.groq_api_key:
+            raise RuntimeError(
+                "LLM_PROVIDER=groq but GROQ_API_KEY is not set. "
+                "Add it to .env or set LLM_PROVIDER=ollama to use the local model."
+            )
+        if not settings.groq_model:
+            raise RuntimeError(
+                "LLM_PROVIDER=groq but GROQ_MODEL is not set. "
+                "Add GROQ_MODEL=<model-name> to .env."
+            )
+        llm = GroqClient(api_key=settings.groq_api_key, model=settings.groq_model)
+        logger.info("LLM provider: Groq  model: %s", settings.groq_model)
+    else:
+        llm = OllamaClient(base_url=settings.ollama_url, model=settings.ollama_model)
+        logger.info("LLM provider: Ollama  model: %s  url: %s",
+                    settings.ollama_model, settings.ollama_url)
+        # Warm up Ollama so the first /ask does not pay the model-load cost.
+        asyncio.create_task(llm.warmup())
     app.state.llm = llm
-    # Warm up Ollama in the background so the first /ask request does not pay
-    # the model-load cost (~60–120 s on CPU).  Fire-and-forget: if Ollama is
-    # not ready yet, warmup() swallows the error and the real call will work.
-    asyncio.create_task(llm.warmup())
 
     yield
     await app.state.arq_redis.aclose()
@@ -54,6 +73,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Copiloto Normativo", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
+
 app.include_router(health_router)
 app.include_router(documents_router)
 app.include_router(search_router)

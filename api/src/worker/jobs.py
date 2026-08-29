@@ -89,7 +89,7 @@ async def process_document(ctx: dict, document_id: str) -> None:
     # pending add_all(db_chunks) from the session's identity map.
     pages, chunks = run_pipeline(pdf_path)
     texts = [c.content for c in chunks]
-    embeddings: list[list[float]] = await asyncio.to_thread(encode_passages, texts)
+    embeddings: list[list[float]] = await encode_passages(texts)
 
     # Capture values we need after the commit in plain local variables so we
     # never have to read attributes off an expired ORM object (option 1).

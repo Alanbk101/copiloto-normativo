@@ -1,63 +1,79 @@
-type ServiceStatus = "ok" | "error";
+"use client";
 
-interface HealthResponse {
-  status: "ok" | "degraded";
-  postgres: ServiceStatus;
-  redis: ServiceStatus;
-}
+import { useEffect, useState } from "react";
+import { getDocument } from "@/lib/api";
+import type { Document } from "@/lib/types";
+import DocumentUploader from "@/components/DocumentUploader";
+import DocumentList from "@/components/DocumentList";
+import QuestionPanel from "@/components/QuestionPanel";
 
-async function fetchHealth(): Promise<HealthResponse | null> {
-  const apiUrl = process.env.API_URL ?? "http://api:8000";
+const TERMINAL = new Set(["completed", "failed"]);
 
-  try {
-    const response = await fetch(`${apiUrl}/health`, { cache: "no-store" });
-    if (!response.ok) {
-      return null;
-    }
-    return response.json() as Promise<HealthResponse>;
-  } catch {
-    return null;
+export default function HomePage() {
+  const [documents, setDocuments] = useState<Document[]>([]);
+
+  // A stable string that changes only when the set of in-progress IDs changes.
+  // Using it as the effect dependency avoids restarting the interval on every
+  // poll tick while still reacting when a document completes or a new one appears.
+  const pendingDocIds = documents
+    .filter((d) => !TERMINAL.has(d.status))
+    .map((d) => d.id)
+    .join(",");
+
+  useEffect(() => {
+    if (!pendingDocIds) return;
+
+    const ids = pendingDocIds.split(",");
+
+    const interval = setInterval(async () => {
+      const results = await Promise.allSettled(ids.map(getDocument));
+      setDocuments((prev) =>
+        prev.map((doc) => {
+          const i = ids.indexOf(doc.id);
+          if (i === -1) return doc;
+          const result = results[i];
+          return result.status === "fulfilled" ? result.value : doc;
+        }),
+      );
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [pendingDocIds]);
+
+  function handleUploaded(doc: Document) {
+    setDocuments((prev) => [doc, ...prev]);
   }
-}
-
-function StatusBadge({ label, status }: { label: string; status: ServiceStatus | "unknown" }) {
-  const isOk = status === "ok";
-  const colorClass = isOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <span className="font-medium">{label}</span>
-      <span className={`rounded-full px-3 py-1 text-sm font-semibold ${colorClass}`}>
-        {status === "unknown" ? "sin respuesta" : status}
-      </span>
-    </div>
-  );
-}
-
-export default async function HomePage() {
-  const health = await fetchHealth();
-
-  const overallStatus: ServiceStatus | "unknown" = health?.status === "ok" ? "ok" : health ? "error" : "unknown";
-
-  return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-6 p-8">
-      <div>
-        <h1 className="text-2xl font-bold">Copiloto Normativo</h1>
-        <p className="mt-1 text-gray-600">Estado del sistema</p>
-      </div>
-
-      <StatusBadge label="Sistema" status={overallStatus} />
-
-      {health ? (
-        <>
-          <StatusBadge label="Postgres" status={health.postgres} />
-          <StatusBadge label="Redis" status={health.redis} />
-        </>
-      ) : (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-          No se pudo conectar con la API.
+    <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
+      <header>
+        <h1 className="text-2xl font-bold text-slate-900">
+          Copiloto Normativo
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Sube documentos regulatorios y consulta su contenido en lenguaje
+          natural.
         </p>
-      )}
+      </header>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Documentos
+        </h2>
+        <DocumentUploader onUploaded={handleUploaded} />
+        {documents.length > 0 && (
+          <div className="mt-4">
+            <DocumentList documents={documents} />
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Consulta
+        </h2>
+        <QuestionPanel />
+      </section>
     </main>
   );
 }

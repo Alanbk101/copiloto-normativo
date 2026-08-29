@@ -139,11 +139,11 @@ async def hybrid_search(
     """
     Return the top-N most relevant chunks for *question* using hybrid retrieval.
 
-    Embeds the query in a thread (encode_query is synchronous and CPU-bound),
-    runs full-text and vector searches concurrently, fuses ranks with RRF,
-    and returns the top-N results with their fusion scores.
+    Embeds the query (via the configured embedding provider), runs full-text
+    and vector searches concurrently, fuses ranks with RRF, and returns the
+    top-N results with their fusion scores.
     """
-    query_embedding: list[float] = await asyncio.to_thread(encode_query, question)
+    query_embedding: list[float] = await encode_query(question)
 
     # Sequential — AsyncSession does not support concurrent operations on the
     # same connection.  Both queries are fast index lookups; gather buys nothing.

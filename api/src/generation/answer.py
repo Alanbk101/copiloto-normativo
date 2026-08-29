@@ -20,12 +20,13 @@ System prompt
 Loaded once at module import from the adjacent prompts/system.txt file.
 Never hardcoded in logic — architecture rule from .cursorrules.
 
-OllamaUnavailable
------------------
-If the LLM call fails (timeout, network error, etc.) answer_question catches
-OllamaUnavailable and returns a structured AnswerResult with found=False and
-a human-readable message.  The retrieval results are not lost — the caller
-can still surface them if desired.
+LLMError
+--------
+If the LLM call fails (timeout, network error, bad API key, etc.)
+answer_question catches LLMError — the base for all provider exceptions —
+and returns a structured AnswerResult with found=False and a human-readable
+message.  The retrieval results are not lost — the caller can still surface
+them if desired.
 """
 
 import uuid
@@ -34,7 +35,7 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.generation.llm import LLMClient, OllamaUnavailable
+from src.generation.llm import LLMClient, LLMError
 from src.retrieval.search import ChunkResult, hybrid_search
 
 _SYSTEM_PROMPT: str = (
@@ -119,7 +120,7 @@ async def answer_question(
 
     try:
         answer = await llm.generate(prompt)
-    except OllamaUnavailable:
+    except LLMError:
         # Retrieval succeeded — return sources even though generation failed.
         return AnswerResult(answer=_LLM_ERROR_MSG, sources=sources, found=False)
 
