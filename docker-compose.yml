@@ -111,6 +111,9 @@ services:
     volumes:
       - ./web/src:/app/src
       - ./web/public:/app/public
+      - ./web/tailwind.config.ts:/app/tailwind.config.ts
+      - ./web/postcss.config.mjs:/app/postcss.config.mjs
+      - ./web/next.config.ts:/app/next.config.ts
     ports:
       - "${WEB_PORT_HOST:-3000}:3000"
     depends_on:

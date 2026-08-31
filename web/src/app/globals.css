@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /*
+   * Explicit base styles that bypass Tailwind JIT for critical tokens.
+   * These guarantee correct rendering even with a stale .next cache,
+   * and ensure next/font CSS variables are consumed correctly.
+   */
+  html,
+  body {
+    background-color: #f6f5f1; /* papel */
+  }
+
+  body {
+    font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+    color: #111110; /* tinta */
+  }
+
+  /*
+   * Override the browser's default blue focus ring globally.
+   * Individual components can refine this further with focus-visible: utilities.
+   */
+  *:focus-visible {
+    outline: 2px solid #6e1423;
+    outline-offset: 2px;
+  }
+}

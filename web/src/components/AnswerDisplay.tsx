@@ -8,34 +8,32 @@ interface Props {
 export default function AnswerDisplay({ result }: Props) {
   if (!result.found) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4">
-        <p className="text-sm font-semibold text-amber-800">
+      <div className="border-l-2 border-l-amber-600 pl-4 py-1">
+        <p className="text-sm font-medium text-amber-800">
           No se encontró información relevante en los documentos cargados.
         </p>
         {result.answer && (
-          <p className="mt-1 text-sm text-amber-700">{result.answer}</p>
+          <p className="mt-1 text-xs text-amber-700">{result.answer}</p>
         )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white px-5 py-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Respuesta
-        </p>
-        <p className="whitespace-pre-wrap leading-relaxed text-slate-800">
+    <div className="space-y-8">
+      {/* Answer body in Spectral — the LLM output reads as a document passage */}
+      <div className="border-l border-linea pl-5 py-1">
+        <p className="font-serif leading-relaxed text-tinta whitespace-pre-wrap">
           {result.answer}
         </p>
       </div>
 
       {result.sources.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mb-3 text-xs text-masa">
             Fuentes citadas ({result.sources.length})
           </p>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {result.sources.map((source, i) => (
               <SourceCard key={source.chunk_id} source={source} index={i} />
             ))}

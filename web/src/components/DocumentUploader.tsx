@@ -48,12 +48,12 @@ export default function DocumentUploader({ onUploaded }: Props) {
   }
 
   const zoneClass = [
-    "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-colors select-none",
-    isDragging
-      ? "border-indigo-400 bg-indigo-50"
-      : "border-slate-300 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/40",
+    "flex cursor-pointer flex-col items-center justify-center border px-6 py-10 transition-colors select-none",
+    isDragging ? "border-guinda bg-guinda/5" : "border-linea hover:border-masa",
     isUploading ? "cursor-not-allowed opacity-60" : "",
-  ].join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div>
@@ -73,50 +73,17 @@ export default function DocumentUploader({ onUploaded }: Props) {
         className={zoneClass}
       >
         {isUploading ? (
-          <>
-            <svg
-              className="h-6 w-6 animate-spin text-indigo-500"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
-            <p className="mt-2 text-sm text-slate-600">Subiendo…</p>
-          </>
+          <p className="text-sm text-masa">Subiendo…</p>
         ) : (
           <>
-            <svg
-              className="h-8 w-8 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 16V4m0 0L8 8m4-4 4 4M6 20h12"
-              />
-            </svg>
-            <p className="mt-2 text-sm font-medium text-slate-700">
-              Arrastra un PDF aquí o{" "}
-              <span className="text-indigo-600 underline underline-offset-2">
-                selecciona uno
+            <p className="text-sm text-tinta">Arrastre el PDF aquí</p>
+            <p className="mt-1.5 text-xs text-masa">
+              o{" "}
+              <span className="text-guinda underline underline-offset-2">
+                haga clic para seleccionar
               </span>
             </p>
-            <p className="mt-1 text-xs text-slate-500">Solo archivos .pdf</p>
+            <p className="mt-3 text-xs text-masa/60">Solo archivos .pdf</p>
           </>
         )}
       </div>
@@ -129,7 +96,11 @@ export default function DocumentUploader({ onUploaded }: Props) {
         onChange={onInputChange}
       />
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-2 border-l-2 border-l-red-700 pl-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

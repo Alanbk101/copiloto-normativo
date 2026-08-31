@@ -45,35 +45,45 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
-      <header>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Copiloto Normativo
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Sube documentos regulatorios y consulta su contenido en lenguaje
-          natural.
-        </p>
-      </header>
+    <main className="min-h-screen px-6 py-12 sm:px-10 lg:px-16">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-10">
+          <h1 className="font-serif text-3xl font-semibold tracking-tight text-tinta">
+            Copiloto Normativo
+          </h1>
+          <p className="mt-2 text-sm text-masa">
+            Sistema de consulta · Documentos regulatorios · México
+          </p>
+          <hr className="mt-8 border-linea" />
+        </header>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Documentos
-        </h2>
-        <DocumentUploader onUploaded={handleUploaded} />
-        {documents.length > 0 && (
-          <div className="mt-4">
-            <DocumentList documents={documents} />
-          </div>
-        )}
-      </section>
+        {/*
+         * Two-column layout on lg+: §1 Expediente (left) | §2 Consulta (right)
+         * Stacks to single column on smaller screens: §1 on top, §2 below.
+         */}
+        <div className="grid grid-cols-1 divide-y divide-[#D8D4CC] lg:grid-cols-[2fr_3fr] lg:divide-y-0">
+          {/* §1 Expediente */}
+          <section className="pb-12 lg:pb-0 lg:pr-12">
+            <h2 className="mb-6 text-sm font-medium text-masa">
+              <span className="font-semibold text-guinda">§1</span> Expediente
+            </h2>
+            <DocumentUploader onUploaded={handleUploaded} />
+            {documents.length > 0 && (
+              <div className="mt-6">
+                <DocumentList documents={documents} />
+              </div>
+            )}
+          </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Consulta
-        </h2>
-        <QuestionPanel />
-      </section>
+          {/* §2 Consulta — border-l is the vertical rule between columns */}
+          <section className="pt-12 lg:border-l lg:border-[#D8D4CC] lg:pl-12 lg:pt-0">
+            <h2 className="mb-6 text-sm font-medium text-masa">
+              <span className="font-semibold text-guinda">§2</span> Consulta
+            </h2>
+            <QuestionPanel />
+          </section>
+        </div>
+      </div>
     </main>
   );
 }

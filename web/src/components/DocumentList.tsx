@@ -12,16 +12,16 @@ const STATUS_LABEL: Record<DocumentStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<DocumentStatus, string> = {
-  pending: "bg-slate-100 text-slate-600",
-  processing: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
+  pending: "text-masa bg-linea/60",
+  processing: "text-masa bg-linea/60",
+  completed: "text-guinda bg-guinda/10",
+  failed: "text-red-700 bg-red-50",
 };
 
 function InlineSpinner() {
   return (
     <svg
-      className="h-3.5 w-3.5 animate-spin text-blue-500"
+      className="h-3.5 w-3.5 animate-spin text-guinda"
       fill="none"
       viewBox="0 0 24 24"
     >
@@ -44,7 +44,7 @@ function InlineSpinner() {
 
 export default function DocumentList({ documents }: Props) {
   return (
-    <ul className="space-y-2">
+    <ul className="divide-y divide-linea">
       {documents.map((doc) => {
         const isActive =
           doc.status === "pending" || doc.status === "processing";
@@ -52,14 +52,14 @@ export default function DocumentList({ documents }: Props) {
         return (
           <li
             key={doc.id}
-            className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3"
+            className="flex items-center justify-between gap-3 py-3"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-800">
+              <p className="truncate text-sm font-medium text-tinta">
                 {doc.filename}
               </p>
               {doc.status === "completed" && doc.chunk_count > 0 && (
-                <p className="mt-0.5 text-xs text-slate-400">
+                <p className="mt-0.5 text-xs text-masa">
                   {doc.chunk_count} fragmentos indexados
                 </p>
               )}
@@ -67,7 +67,7 @@ export default function DocumentList({ documents }: Props) {
             <div className="flex shrink-0 items-center gap-2">
               {isActive && <InlineSpinner />}
               <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASSES[doc.status]}`}
+                className={`px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[doc.status]}`}
               >
                 {STATUS_LABEL[doc.status]}
               </span>
