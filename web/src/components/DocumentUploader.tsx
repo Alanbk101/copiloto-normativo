@@ -43,13 +43,14 @@ export default function DocumentUploader({ onUploaded }: Props) {
   function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) void handleFile(file);
-    // Reset so the same file can be selected again after a failed upload.
     e.target.value = "";
   }
 
   const zoneClass = [
-    "flex cursor-pointer flex-col items-center justify-center border px-6 py-10 transition-colors select-none",
-    isDragging ? "border-guinda bg-guinda/5" : "border-linea hover:border-masa",
+    "flex cursor-pointer flex-col items-center justify-center px-6 py-10 transition-colors select-none",
+    isDragging
+      ? "border-2 border-guinda bg-guinda/[0.06]"
+      : "border border-linea hover:border-guinda/50 hover:bg-guinda/[0.025]",
     isUploading ? "cursor-not-allowed opacity-60" : "",
   ]
     .filter(Boolean)
@@ -76,14 +77,39 @@ export default function DocumentUploader({ onUploaded }: Props) {
           <p className="text-sm text-masa">Subiendo…</p>
         ) : (
           <>
-            <p className="text-sm text-tinta">Arrastre el PDF aquí</p>
+            {/*
+             * Ícono de documento normativo — folio con esquina doblada y
+             * tres líneas de texto (artículos del expediente).
+             * SVG inline sin dependencias de librerías.
+             * Transiciona de masa/50 a guinda en drag-over.
+             */}
+            <svg
+              className={`mb-3 h-8 w-8 transition-colors duration-150 ${
+                isDragging ? "text-guinda" : "text-masa/50"
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.25}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <line x1="10" y1="9" x2="8" y2="9" />
+            </svg>
+
+            <p className="text-sm text-tinta">Deposite el expediente</p>
             <p className="mt-1.5 text-xs text-masa">
               o{" "}
               <span className="text-guinda underline underline-offset-2">
                 haga clic para seleccionar
               </span>
             </p>
-            <p className="mt-3 text-xs text-masa/60">Solo archivos .pdf</p>
+            <p className="mt-3 text-xs text-masa/50">Solo archivos .pdf</p>
           </>
         )}
       </div>

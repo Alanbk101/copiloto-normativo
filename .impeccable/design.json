@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-01T00:00:00Z",
+  "title": "Design System: Copiloto Normativo",
+  "extensions": {
+    "colorMeta": {
+      "guinda": {
+        "role": "primary",
+        "displayName": "Guinda DOF",
+        "canonical": "#6E1423",
+        "tonalRamp": ["#1a050a", "#2d0a12", "#4a0f1b", "#6e1423", "#8c2035", "#aa3f52", "#c87280", "#e8b8be"]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel Marfil",
+        "canonical": "#F6F5F1",
+        "tonalRamp": ["#6b6a66", "#8c8b87", "#aeada9", "#cccbc7", "#dddcd8", "#e9e8e4", "#f0efe9", "#f6f5f1"]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#111110",
+        "tonalRamp": ["#111110", "#222220", "#343430", "#4a4a47", "#656560", "#888882", "#b5b5b0", "#deddda"]
+      },
+      "masa": {
+        "role": "neutral",
+        "displayName": "Masa",
+        "canonical": "#3A3530",
+        "tonalRamp": ["#1a1815", "#27231f", "#3a3530", "#4e4a44", "#686058", "#8a8178", "#b0a99e", "#d5cfc7"]
+      },
+      "linea": {
+        "role": "neutral",
+        "displayName": "Linea",
+        "canonical": "#D8D4CC",
+        "tonalRamp": ["#6b6760", "#8a8680", "#a8a49e", "#bfbcb6", "#cbc7c0", "#d8d4cc", "#e5e3de", "#f0eeea"]
+      },
+      "cita": {
+        "role": "neutral",
+        "displayName": "Cita",
+        "canonical": "#EDECE7",
+        "tonalRamp": ["#6e6c68", "#8c8a86", "#aaa9a4", "#c0bfba", "#d4d2ce", "#e0deda", "#edece7", "#f5f4f1"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Título principal del producto. Una sola instancia por pantalla." },
+      "headline": { "displayName": "Headline UI", "purpose": "Encabezados de sección con marcador §. Identifica divisiones estructurales, no titulares editoriales." },
+      "body": { "displayName": "Body documental", "purpose": "Respuesta del LLM en Spectral. Marca la frontera entre interfaz y contenido documental." },
+      "label": { "displayName": "Label", "purpose": "Metadatos, contadores, estados. Tabular-nums para cifras." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "fade-up", "value": "opacity 0 → 1, translateY 6px → 0, duration 0.3s ease-out", "purpose": "Aparición de source cards post-consulta. Delay escalonado: index × 80ms." },
+      { "name": "color-transition", "value": "transition-colors", "purpose": "Hover en botones, zona de upload, inputs." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px", "note": "Padding horizontal aumenta a 40px" },
+      { "name": "lg", "value": "1024px", "note": "Activa grid de 2 columnas 2fr/3fr y divisor vertical" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón Primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Única acción primaria de la interfaz (Preguntar). Inversión guinda/papel en hover.",
+      "html": "<button class=\"ds-btn-primary\">Preguntar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; background: #6E1423; color: #F6F5F1; border: 1px solid #6E1423; padding: 8px 20px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.4; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; border-radius: 0; } .ds-btn-primary:hover { background: #F6F5F1; color: #6E1423; } .ds-btn-primary:focus-visible { outline: 2px solid #6E1423; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Zona de Upload",
+      "kind": "custom",
+      "refersTo": "upload-zone",
+      "description": "Drop zone para PDF. Estado de drag cambia border a guinda con fondo guinda/5.",
+      "html": "<div class=\"ds-upload-zone\"><p class=\"ds-upload-primary\">Arrastre el PDF aquí</p><p class=\"ds-upload-secondary\">o <span class=\"ds-upload-link\">haga clic para seleccionar</span></p><p class=\"ds-upload-hint\">Solo archivos .pdf</p></div>",
+      "css": ".ds-upload-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #D8D4CC; padding: 40px 24px; cursor: pointer; user-select: none; transition: border-color 0.15s ease, background-color 0.15s ease; border-radius: 0; } .ds-upload-zone:hover { border-color: #3A3530; } .ds-upload-primary { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; color: #111110; margin: 0; } .ds-upload-secondary { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.75rem; color: #3A3530; margin: 6px 0 0; } .ds-upload-link { color: #6E1423; text-decoration: underline; text-underline-offset: 2px; } .ds-upload-hint { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.75rem; color: rgba(58, 53, 48, 0.6); margin: 12px 0 0; }"
+    },
+    {
+      "name": "Textarea de Consulta",
+      "kind": "input",
+      "refersTo": "upload-zone",
+      "description": "Campo de texto para pregunta en lenguaje natural. Focus en guinda, sin radius.",
+      "html": "<textarea class=\"ds-textarea\" rows=\"4\" placeholder=\"¿Qué dice el artículo sobre las obligaciones del contribuyente?\"></textarea>",
+      "css": ".ds-textarea { width: 100%; resize: none; border: 1px solid #D8D4CC; background: #F6F5F1; padding: 12px 16px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; color: #111110; line-height: 1.6; transition: border-color 0.15s ease; border-radius: 0; box-sizing: border-box; } .ds-textarea::placeholder { color: rgba(58, 53, 48, 0.5); } .ds-textarea:focus { outline: none; border-color: #6E1423; box-shadow: 0 0 0 1px rgba(110, 20, 35, 0.2); } .ds-textarea:disabled { opacity: 0.6; cursor: not-allowed; }"
+    },
+    {
+      "name": "Source Card",
+      "kind": "card",
+      "refersTo": "source-card",
+      "description": "Componente firma del sistema. Evoca artículo numerado del DOF: número guinda, ruta, leader-dots, página.",
+      "html": "<div class=\"ds-source-card\"><div class=\"ds-source-num\">1</div><div class=\"ds-source-body\"><div class=\"ds-source-row\"><span class=\"ds-source-path\">Artículo 27 — Obligaciones del Contribuyente</span><span class=\"ds-source-dots\"></span><span class=\"ds-source-page\">Pág. 42</span></div></div></div>",
+      "css": ".ds-source-card { display: flex; background: #EDECE7; border-left: 2px solid #6E1423; } .ds-source-num { display: flex; flex-shrink: 0; align-items: flex-start; padding: 12px 16px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; font-variant-numeric: tabular-nums; color: #6E1423; } .ds-source-body { min-width: 0; flex: 1; padding: 12px 16px 12px 0; } .ds-source-row { display: flex; align-items: baseline; gap: 8px; } .ds-source-path { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; color: #111110; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-source-dots { flex: 1; min-width: 16px; border-bottom: 1px dashed #D8D4CC; margin-bottom: 3px; } .ds-source-page { flex-shrink: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #3A3530; white-space: nowrap; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "button-primary",
+      "description": "Badge de estado de documento. Cuatro variantes: completed (guinda), pending/processing (masa), failed (rojo).",
+      "html": "<span class=\"ds-badge ds-badge--completed\">Listo</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 2px 8px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; border-radius: 0; } .ds-badge--completed { color: #6E1423; background: rgba(110, 20, 35, 0.1); } .ds-badge--pending, .ds-badge--processing { color: #3A3530; background: rgba(216, 212, 204, 0.6); } .ds-badge--failed { color: #b91c1c; background: #fef2f2; }"
+    },
+    {
+      "name": "Estado Informativo (Left-border)",
+      "kind": "custom",
+      "description": "Patrón base para todos los estados de sistema. Borde izquierdo 2px en color semántico, sin fondo saturado.",
+      "html": "<div class=\"ds-state ds-state--error\"><p class=\"ds-state-title\">Error en la consulta</p><p class=\"ds-state-body\">No se pudo conectar con el servidor.</p></div>",
+      "css": ".ds-state { border-left: 2px solid currentColor; padding: 4px 0 4px 16px; } .ds-state--loading { color: #3A3530; } .ds-state--error { color: #b91c1c; } .ds-state--warning { color: #d97706; } .ds-state--citation { color: #6E1423; } .ds-state-title { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; color: inherit; margin: 0; } .ds-state-body { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.75rem; color: inherit; margin: 2px 0 0; opacity: 0.85; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Expediente Oficial",
+    "overview": "Copiloto Normativo no es una aplicación de chat — es un instrumento documental. La interfaz emula la estructura de un expediente regulatorio mexicano: encabezados numerados con símbolo de sección (§), tipografía de publicación oficial, superficies de papel envejecido y un acento guinda que no se derrama. Cada elemento visual dice \"esto es un documento de autoridad\", antes de que el usuario lea una sola línea de contenido.\n\nLa densidad es funcional, no decorativa. Los márgenes anchos, los divisores sin peso y el blanco entre secciones existen para que el ojo localice información rápidamente — igual que en un reglamento bien tipografiado. La Spectral (serif de lectura extendida) aparece exactamente donde aparece en una publicación legal: en el texto de respuesta del LLM, que se lee como un extracto de documento, no como un mensaje de chat.\n\nLa paleta es una elección editorial estricta: guinda oscuro sobre papel marfil, con masas de texto en café-gris. No hay color decorativo. La voz del sistema es precisa, directa y sin eufemismos — refleja que el dominio no admite ambigüedad.",
+    "keyCharacteristics": [
+      "Geometría completamente rectilineal — cero border-radius en toda la interfaz",
+      "Acento guinda estrictamente reservado: marcadores de sección, bordes de autoridad, botón primario, focus ring",
+      "Tipografía dual con propósito semántico: Spectral para contenido documental, IBM Plex Sans para UI",
+      "Profundidad por borde izquierdo, no por sombra",
+      "Terminología de expediente (§1, §2, 'Fuentes citadas') — no terminología de producto SaaS"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "El guinda aparece en ≤ 3 elementos visibles simultáneamente. Nunca como color de fondo de superficie completa, nunca en texto de párrafo. Su aparición señala autoridad o acción; usarlo más diluye la señal.", "section": "colors" },
+      { "name": "The No-Color Rule", "body": "Los estados de error usan rojo (#dc2626); los de advertencia, ámbar (#d97706). Ningún otro color entra al sistema. No hay gradientes, no hay colores de acento adicionales.", "section": "colors" },
+      { "name": "The Two-Font Rule", "body": "Solo Spectral y IBM Plex Sans. Spectral exclusivamente en: nombre del producto (h1), respuesta del LLM, símbolo § en encabezados de sección. IBM Plex Sans en todo lo demás. No hay excepciones.", "section": "typography" },
+      { "name": "The Flat Authority Rule", "body": "La jerarquía se establece con bordes, no con elevación. Un elemento más importante que su contexto recibe un borde izquierdo en guinda, no una sombra o una tarjeta flotante.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar guinda exclusivamente en: marcadores §, bordes de source card, botón primario, focus ring, número de cita, enlace de upload.",
+      "Do usar Spectral en: título h1, respuestas del LLM, símbolo § en encabezados de sección. IBM Plex Sans en todo lo demás.",
+      "Do mantener border-radius: 0 en todos los componentes nuevos.",
+      "Do usar el patrón de borde izquierdo (border-l-2) para comunicar jerarquía y estado.",
+      "Do usar animación fade-up (0.3s ease-out) y delay escalonado cuando elementos de lista aparecen después de una operación asíncrona."
+    ],
+    "donts": [
+      "Don't añadir border-radius a ningún componente. Ni siquiera rounded-sm.",
+      "Don't usar guinda como color de texto de párrafo o como fondo de superficie amplia.",
+      "Don't añadir sombras (box-shadow) — el sistema es plano por decisión explícita.",
+      "Don't introducir una tercera familia tipográfica.",
+      "Don't usar terminología de producto SaaS en la UI — no 'Upload', no 'Chat', no 'Submit'.",
+      "Don't usar color de fondo saturado para estados de error/advertencia — solo el borde izquierdo lleva el color semántico."
+    ]
+  }
+}

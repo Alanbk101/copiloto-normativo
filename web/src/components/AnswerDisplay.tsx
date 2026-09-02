@@ -8,7 +8,7 @@ interface Props {
 export default function AnswerDisplay({ result }: Props) {
   if (!result.found) {
     return (
-      <div className="border-l-2 border-l-amber-600 pl-4 py-1">
+      <div className="animate-answer-reveal border-l-2 border-l-amber-600 pl-4 py-1">
         <p className="text-sm font-medium text-amber-800">
           No se encontró información relevante en los documentos cargados.
         </p>
@@ -20,7 +20,11 @@ export default function AnswerDisplay({ result }: Props) {
   }
 
   return (
-    <div className="space-y-8">
+    /*
+     * animate-answer-reveal: fade-up a 0.45s — el reveal del expediente
+     * debe sentirse como un documento que emerge, no como un pop.
+     */
+    <div className="animate-answer-reveal space-y-8">
       {/* Answer body in Spectral — the LLM output reads as a document passage */}
       <div className="border-l border-linea pl-5 py-1">
         <p className="font-serif leading-relaxed text-tinta whitespace-pre-wrap">

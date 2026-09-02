@@ -60,7 +60,15 @@ export default function QuestionPanel() {
           <button
             type="submit"
             disabled={isAsking || !question.trim()}
-            className="border border-guinda bg-guinda px-5 py-2 text-sm font-medium text-papel transition-colors hover:bg-papel hover:text-guinda focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-guinda focus-visible:ring-offset-2 focus-visible:ring-offset-papel disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-consulta"
+            /* style prop garantiza guinda sólido en estado activo
+               independientemente del caché JIT de Tailwind.
+               Se omite cuando disabled para que el CSS ghost tome efecto. */
+            style={
+              isAsking || !question.trim()
+                ? undefined
+                : { backgroundColor: "#6e1423", color: "#f6f5f1", borderColor: "#6e1423" }
+            }
           >
             Preguntar
           </button>
@@ -68,13 +76,9 @@ export default function QuestionPanel() {
       </form>
 
       {isAsking && (
-        <div className="border-l-2 border-l-masa pl-4 py-1">
+        <div className="border-l-2 border-l-guinda pl-4 py-1">
           <p className="text-sm font-medium text-tinta">
             Analizando los documentos…
-          </p>
-          <p className="mt-0.5 text-xs text-masa">
-            El modelo corre en CPU local. La primera consulta puede tardar hasta
-            2 minutos.
           </p>
         </div>
       )}

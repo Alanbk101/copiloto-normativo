@@ -3,11 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  /*
-   * Explicit base styles that bypass Tailwind JIT for critical tokens.
-   * These guarantee correct rendering even with a stale .next cache,
-   * and ensure next/font CSS variables are consumed correctly.
-   */
   html,
   body {
     background-color: #f6f5f1; /* papel */
@@ -16,14 +11,159 @@
   body {
     font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
     color: #111110; /* tinta */
+
+    /*
+     * ─── Fondo: expediente legal mexicano ────────────────────────────────────
+     *
+     * Capa 1 (inferior) · Líneas de expediente a 28 px
+     *   Cadencia de papel legal. Masa-marrón al 11% — ya visible, aún
+     *   legible. El ojo las lee como ritmo, no como obstáculo.
+     *
+     * Capa 2 · Luz ámbar desde arriba
+     *   Gradiente radial que simula luz ambiente sobre archivo envejecido.
+     *   22% opacity — cálido sin virar a amarillo.
+     *
+     * Capa 3 (superior) · Sombra de anclaje inferior
+     *   Oscurecimiento sutil en el 20% inferior de la página.
+     *   Evita que el fondo "flote" en pantallas largas.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    background-image:
+      linear-gradient(
+        to bottom,
+        transparent 78%,
+        rgba(58, 53, 48, 0.07) 100%
+      ),
+      radial-gradient(
+        ellipse 140% 60% at 50% -6%,
+        rgba(196, 156, 96, 0.22) 0%,
+        transparent 58%
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 27px,
+        rgba(58, 53, 48, 0.19) 27px,
+        rgba(58, 53, 48, 0.19) 28px
+      );
   }
 
   /*
-   * Override the browser's default blue focus ring globally.
-   * Individual components can refine this further with focus-visible: utilities.
+   * ─── Watermark principal § ────────────────────────────────────────────────
+   *
+   * Permanece fijo al viewport mientras se scrollea.
+   * body > * queda en z-index:1 por encima de ambos pseudo-elementos.
+   * ─────────────────────────────────────────────────────────────────────────
    */
+  body::after {
+    content: '\00a7';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%) rotate(-14deg);
+    font-family: var(--font-spectral), 'Georgia', 'Times New Roman', serif;
+    font-size: clamp(220px, 38vw, 480px);
+    font-weight: 600;
+    color: rgba(110, 20, 35, 0.038);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  /*
+   * ─── Watermark secundario § ───────────────────────────────────────────────
+   *
+   * Esquina superior derecha, rotado en sentido contrario.
+   * Opacidad menor — crea profundidad de campo, no duplicación obvia.
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  body::before {
+    content: '\00a7';
+    position: fixed;
+    top: 4%;
+    right: -4%;
+    transform: rotate(12deg);
+    font-family: var(--font-spectral), 'Georgia', 'Times New Roman', serif;
+    font-size: clamp(100px, 19vw, 240px);
+    font-weight: 600;
+    color: rgba(110, 20, 35, 0.016);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    line-height: 1;
+  }
+
+  /* Todo el contenido queda encima de ambos watermarks */
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+
   *:focus-visible {
     outline: 2px solid #6e1423;
     outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /*
+   * ─── Reveal de respuesta ──────────────────────────────────────────────────
+   *
+   * Versión más lenta de fade-up — la respuesta del LLM merece
+   * 150 ms más de recorrido que un elemento de lista.
+   * El `both` fill mantiene opacity:0 antes de que empiece.
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  .animate-answer-reveal {
+    animation: fade-up 0.45s ease-out both;
+  }
+}
+
+@layer components {
+  /*
+   * ─── Botón primario ───────────────────────────────────────────────────────
+   *
+   * Guinda (#6e1423) sólido en estado activo.
+   * El `style` prop en el JSX lo garantiza sobre el caché JIT.
+   *
+   * Estado deshabilitado (textarea vacío): ghost con outline guinda al 28%.
+   * Sin opacity global — opacity sobre guinda/papel produce rosa pálido.
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  .btn-consulta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #6e1423;
+    color: #f6f5f1;
+    border: 1px solid #6e1423;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .btn-consulta:hover:not(:disabled) {
+    background-color: #f6f5f1;
+    color: #6e1423;
+  }
+
+  .btn-consulta:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #f6f5f1, 0 0 0 4px #6e1423;
+  }
+
+  .btn-consulta:disabled {
+    background-color: transparent;
+    color: rgba(110, 20, 35, 0.42);
+    border-color: rgba(110, 20, 35, 0.48);
+    cursor: not-allowed;
   }
 }
