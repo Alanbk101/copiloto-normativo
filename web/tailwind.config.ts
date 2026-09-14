@@ -15,6 +15,7 @@ const config: Config = {
       fontFamily: {
         serif: ["var(--font-spectral)", "Georgia", "serif"],
         sans: ["var(--font-ibm-plex-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-ibm-plex-mono)", "ui-monospace", "monospace"],
       },
       animation: {
         "fade-up": "fade-up 0.3s ease-out both",

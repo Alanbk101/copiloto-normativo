@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Spectral, IBM_Plex_Sans } from "next/font/google";
+import { Spectral, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 const spectral = Spectral({
@@ -17,6 +17,13 @@ const ibmPlexSans = IBM_Plex_Sans({
   display: "swap",
 });
 
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-plex-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Copiloto Normativo",
   description: "RAG sobre documentos regulatorios mexicanos",
@@ -28,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${spectral.variable} ${ibmPlexSans.variable}`}>
+    <html lang="es" className={`${spectral.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
       <body className="min-h-screen bg-papel font-sans text-tinta antialiased">
         {children}
       </body>
